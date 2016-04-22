@@ -48,40 +48,25 @@ public class Main {
         config.setJdbcUrl("jdbc:postgresql://localhost/test");
         config.setUsername("test_user");
         config.setPassword("qwerty");
-//        config.addDataSourceProperty("cachePrepStmts", "true");
-//        config.addDataSourceProperty("prepStmtCacheSize", "250");
-//        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
         HikariDataSource ds = new HikariDataSource(config);
 
 
         Sql2o sql2o = new Sql2o(ds, new PostgresQuirks());
-//        sql2o.getDataSource().getConnection().setAutoCommit(false);
-        createTable(sql2o);
+        // createTable(sql2o);
         sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
         Push push = new Push(sql2o);
+        CheckIndexes checkIndexes = new CheckIndexes(sql2o);
         post("/push", push);
-        get("/checkIndexes", (request, response) -> {
-            StringBuilder sb = new StringBuilder();
-            Table table = sql2o.open()
-                    .createQuery("SELECT * FROM CHK ORDER BY NUMBER")
-                    .executeAndFetchTable();
-            for (int i = 0; i < table.rows().size(); i++) {
-                Integer num = table.rows().get(i).getInteger("NUMBER");
-                if (num.equals(i)) {
-                    sb.append(String.format("OK! %d == %d\n", num, i));
-                } else {
-                    sb.append(String.format("Error! %d != %d\n", num, i));
-                    return sb.append("Error!\n").toString();
-                }
-            }
-            return sb.append("OK\n").toString();
-        });
+        get("/checkIndexes", checkIndexes);
     }
 }
+
 
 class Push implements Route {
     static AtomicInteger insertCount = new AtomicInteger();
     Sql2o sql2o;
+//    String json = String.format("{\"number\":%d,\"status\":\"JSON\"}", num);
+
 
     public Push(Sql2o sql2o) {
         this.sql2o = sql2o;
@@ -108,7 +93,34 @@ class Push implements Route {
 
         insertCount.incrementAndGet();
 
-        return response;
+        return "";
+    }
+}
+
+
+class CheckIndexes implements Route {
+    Sql2o sql2o;
+
+    public CheckIndexes(Sql2o sql2o) {
+        this.sql2o = sql2o;
+    }
+
+    @Override
+    public Object handle(Request request, Response response) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        Table table = sql2o.open()
+                .createQuery("SELECT * FROM CHK ORDER BY NUMBER")
+                .executeAndFetchTable();
+        for (int i = 0; i < table.rows().size(); i++) {
+            Integer num = table.rows().get(i).getInteger("NUMBER");
+            if (num.equals(i)) {
+                sb.append(String.format("OK! %d == %d\n", num, i));
+            } else {
+                sb.append(String.format("Error! %d != %d\n", num, i));
+                return sb.append("Error!\n").toString();
+            }
+        }
+        return sb.append("OK\n").toString();
     }
 }
 

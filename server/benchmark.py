@@ -22,7 +22,7 @@ def push(process_number):
         # time.sleep(1 - (finish - start))
 
 
-process_count = 30
+process_count = 300
 iterations = process_count
 
 for x in range(process_count):
