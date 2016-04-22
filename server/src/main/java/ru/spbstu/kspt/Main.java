@@ -73,27 +73,29 @@ class Push implements Route {
     }
 
     @Override
-    public Object handle(Request request, Response response) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-
-        Map<String, Object> map = mapper.readValue(request.bodyAsBytes(),
-                new TypeReference<Map<String, Object>>() {
-                });
-
-        String sql2 = "INSERT INTO CHK VALUES (:number, :status)";
-
+    public Object handle(Request request, Response response) {
         try (Connection con = sql2o.beginTransaction()) {
+            ObjectMapper mapper = new ObjectMapper();
+
+            Map<String, Object> map = mapper.readValue(request.bodyAsBytes(),
+                    new TypeReference<Map<String, Object>>() {
+                    });
+
+            String sql2 = "INSERT INTO CHK VALUES (:number, :status)";
+
             Query query = con.createQuery(sql2);
             for (Map.Entry<String, Object> entry : map.entrySet()) {
                 query.addParameter(entry.getKey(), entry.getValue());
             }
             query.executeUpdate();
             con.commit();
+
+            insertCount.incrementAndGet();
+            return "";
+        } catch (Exception e) {
+            response.status(500);
+            return "Error: " + e.toString();
         }
-
-        insertCount.incrementAndGet();
-
-        return "";
     }
 }
 
