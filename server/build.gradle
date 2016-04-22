@@ -1,0 +1,23 @@
+group 'ru.spbstu.kspt'
+version '1.0'
+
+apply plugin: 'java'
+apply plugin: 'application'
+
+sourceCompatibility = 1.8
+mainClassName = "ru.spbstu.kspt.Main"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.sparkjava:spark-core:2.3'
+    compile 'org.sql2o:sql2o:1.5.4'
+//    compile 'org.hsqldb:hsqldb:2.3.3'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.7.3'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.7.3'
+    compile 'org.postgresql:postgresql:9.4.1208'
+    compile 'com.zaxxer:HikariCP:2.4.5'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+}
