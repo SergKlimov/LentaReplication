@@ -1,5 +1,5 @@
 /**
- * Created by artyom on 22.04.16.
+ * Created by Artyom on 22.04.16. 
  */
 
 package ru.spbstu.kspt;
@@ -54,32 +54,27 @@ public class Main {
         Sql2o sql2o = new Sql2o(ds, new PostgresQuirks());
         // createTable(sql2o);
         sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
-        Push push = new Push(sql2o);
-        CheckIndexes checkIndexes = new CheckIndexes(sql2o);
-        post("/push", push);
-        get("/checkIndexes", checkIndexes);
+        post("/push", new JSONPush(sql2o));
+        get("/push", new BenchmarkPush(sql2o));
+        get("/checkIndexes", new CheckIndexes(sql2o));
     }
 }
 
 
-class Push implements Route {
+abstract class Push implements Route {
     static AtomicInteger insertCount = new AtomicInteger();
     Sql2o sql2o;
-//    String json = String.format("{\"number\":%d,\"status\":\"JSON\"}", num);
-
 
     public Push(Sql2o sql2o) {
         this.sql2o = sql2o;
     }
 
+    abstract Map<String, Object> getData(Request request) throws Exception;
+
     @Override
     public Object handle(Request request, Response response) {
         try (Connection con = sql2o.beginTransaction()) {
-            ObjectMapper mapper = new ObjectMapper();
-
-            Map<String, Object> map = mapper.readValue(request.bodyAsBytes(),
-                    new TypeReference<Map<String, Object>>() {
-                    });
+            Map<String, Object> map = getData(request);
 
             String sql2 = "INSERT INTO CHK VALUES (:number, :status)";
 
@@ -96,6 +91,42 @@ class Push implements Route {
             response.status(500);
             return "Error: " + e.toString();
         }
+    }
+}
+
+class JSONPush extends Push {
+    public JSONPush(Sql2o sql2o) {
+        super(sql2o);
+    }
+
+    @Override
+    Map<String, Object> getData(Request request) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+
+        return mapper.readValue(request.bodyAsBytes(),
+                new TypeReference<Map<String, Object>>() {
+                });
+    }
+}
+
+
+class BenchmarkPush extends Push {
+    public BenchmarkPush(Sql2o sql2o) {
+        super(sql2o);
+    }
+
+    static AtomicInteger localCount = new AtomicInteger();
+
+    @Override
+    Map<String, Object> getData(Request request) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        int num = localCount.getAndIncrement();
+
+        String json = String.format("{\"number\":%d,\"status\":\"JSON\"}", num);
+
+        return mapper.readValue(json,
+                new TypeReference<Map<String, Object>>() {
+                });
     }
 }
 
