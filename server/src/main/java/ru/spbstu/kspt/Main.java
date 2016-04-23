@@ -1,11 +1,12 @@
 /**
- * Created by Artyom on 22.04.16. 
+ * Created by Artyom on 22.04.16.
  */
 
 package ru.spbstu.kspt;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.sql2o.Connection;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.Spark.threadPool;
 
 public class Main {
     private static void createTable(Sql2o sql2o) {
@@ -40,21 +42,27 @@ public class Main {
         }
     }
 
-    public static void main(String[] args) throws SQLException {
-        Timer timer = new Timer();
-        timer.schedule(new CountInserts(), 0, 1000);
-
+    private static HikariDataSource setUpDataSource() {
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:postgresql://localhost/test");
         config.setUsername("test_user");
         config.setPassword("qwerty");
-        HikariDataSource ds = new HikariDataSource(config);
+        return new HikariDataSource(config);
+    }
 
+    public static void main(String[] args) throws SQLException {
+        new Timer().schedule(new CountInserts(), 0, 1000);
+
+        HikariDataSource ds = setUpDataSource();
 
         Sql2o sql2o = new Sql2o(ds, new PostgresQuirks());
         // createTable(sql2o);
         sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
-        post("/push", new JSONPush(sql2o));
+
+        // TODO: Use threadPool(300);
+
+        post("/pushJSON", new JSONPush(sql2o));
+        post("/push", new CBORPush(sql2o));
         get("/push", new BenchmarkPush(sql2o));
         get("/checkIndexes", new CheckIndexes(sql2o));
     }
@@ -76,12 +84,8 @@ abstract class Push implements Route {
         try (Connection con = sql2o.beginTransaction()) {
             Map<String, Object> map = getData(request);
 
-            String sql2 = "INSERT INTO CHK VALUES (:number, :status)";
-
-            Query query = con.createQuery(sql2);
-            for (Map.Entry<String, Object> entry : map.entrySet()) {
-                query.addParameter(entry.getKey(), entry.getValue());
-            }
+            Query query = con.createQuery("INSERT INTO CHK VALUES (:number, :status)");
+            map.forEach(query::addParameter);
             query.executeUpdate();
             con.commit();
 
@@ -104,8 +108,23 @@ class JSONPush extends Push {
         ObjectMapper mapper = new ObjectMapper();
 
         return mapper.readValue(request.bodyAsBytes(),
-                new TypeReference<Map<String, Object>>() {
-                });
+                new TypeReference<Map<String, Object>>() {});
+    }
+}
+
+
+class CBORPush extends Push {
+    public CBORPush(Sql2o sql2o) {
+        super(sql2o);
+    }
+
+    @Override
+    Map<String, Object> getData(Request request) throws Exception {
+        CBORFactory f = new CBORFactory();
+        ObjectMapper mapper = new ObjectMapper(f);
+
+        return mapper.readValue(request.bodyAsBytes(),
+                new TypeReference<Map<String, Object>>() {});
     }
 }
 
@@ -125,8 +144,7 @@ class BenchmarkPush extends Push {
         String json = String.format("{\"number\":%d,\"status\":\"JSON\"}", num);
 
         return mapper.readValue(json,
-                new TypeReference<Map<String, Object>>() {
-                });
+                new TypeReference<Map<String, Object>>() {});
     }
 }
 
