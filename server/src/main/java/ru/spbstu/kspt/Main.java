@@ -31,7 +31,8 @@ public class Main {
         String sql =
                 "CREATE TABLE CHK (" +
                         "    number INT PRIMARY KEY," +
-                        "    status VARCHAR(10) NOT NULL" +
+                        "    status VARCHAR(10) NOT NULL," +
+                        "    id_store INTEGER" +
                         ")";
 
         try (Connection con = sql2o.beginTransaction()) {
@@ -54,7 +55,7 @@ public class Main {
         HikariDataSource ds = setUpDataSource();
 
         Sql2o sql2o = new Sql2o(ds, new PostgresQuirks());
-        // createTable(sql2o);
+        createTable(sql2o);
         sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
 
         // TODO: Use threadPool(300);
@@ -66,13 +67,13 @@ public class Main {
 
 
         post("/pushJSON", (request, response) -> {
-            Push.Payload payload = jsonMapper.readValue(request.bodyAsBytes(),
-                    Push.Payload.class);
+            Payload payload = jsonMapper.readValue(request.bodyAsBytes(),
+                    Payload.class);
             return push.push(payload, response);
         });
         post("/push", (request, response) -> {
-            Push.Payload payload = cborMapper.readValue(request.bodyAsBytes(),
-                    Push.Payload.class);
+            Payload payload = cborMapper.readValue(request.bodyAsBytes(),
+                    Payload.class);
             return push.push(payload, response);
         });
         get("/checkIndexes", new CheckIndexes(sql2o));
@@ -84,7 +85,7 @@ class Push {
     static AtomicInteger insertCount = new AtomicInteger();
     Sql2o sql2o;
     String insertStatement;
-    final int paramsNum = 10;
+    final int paramsNum = 3;
 
     public Push(Sql2o sql2o) {
         this.sql2o = sql2o;
@@ -105,28 +106,30 @@ class Push {
         try (Connection con = sql2o.beginTransaction()) {
             Query query = con.createQuery(insertStatement);
 
-            for (List<Object> row : payload.checks) {
-                row.add(payload.src);
-                query.withParams(row).addToBatch();
+            for (List<Object> row: payload.checks) {
+                row.add(payload.srcStore);
             }
 
-            query.executeBatch();
+            if (payload.checks.size() == 1) {
+                query.withParams(payload.checks.get(0).toArray()).executeUpdate();
+            } else {
+                for (List<Object> row: payload.checks) {
+                    row.add(payload.srcStore);
+                    query.withParams(row.toArray()).addToBatch();
+                }
+                query.executeBatch();
+            }
             con.commit();
 
             insertCount.addAndGet(payload.checks.size());
             return "";
         } catch (Exception e) {
+            e.printStackTrace();
             response.status(500);
             return "Error: " + e.toString();
         }
     }
-
-    class Payload {
-        List<List<Object>> checks;
-        int src;
-    }
 }
-
 
 class CheckIndexes implements Route {
     Sql2o sql2o;
