@@ -111,16 +111,7 @@ class Push {
 
             for (List<Object> row: payload.checks) {
                 row.add(payload.srcStore);
-            }
-
-            if (payload.checks.size() == 1) {
-                query.withParams(payload.checks.get(0).toArray()).executeUpdate();
-            } else {
-                for (List<Object> row: payload.checks) {
-                    row.add(payload.srcStore);
-                    query.withParams(row.toArray()).addToBatch();
-                }
-                query.executeBatch();
+                query.withParams(row.toArray()).executeUpdate();
             }
             con.commit();
 
