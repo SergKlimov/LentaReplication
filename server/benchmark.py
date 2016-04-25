@@ -23,7 +23,8 @@ def push(process_number):
                         "JSON" + str(num)
                     ]
                 ],
-            "srcStore": 1}
+            "srcStore": 1
+        }
         r = requests.post("http://127.0.0.1:4567/pushJSON", json=payload)
         print(r.text)
         finish = time.perf_counter()
