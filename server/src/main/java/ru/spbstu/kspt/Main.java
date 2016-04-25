@@ -4,7 +4,6 @@
 
 package ru.spbstu.kspt;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.zaxxer.hikari.HikariConfig;
@@ -12,21 +11,20 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
-import org.sql2o.data.Table;
 import org.sql2o.quirks.PostgresQuirks;
 import spark.Request;
 import spark.Response;
 import spark.Route;
 
 import java.sql.SQLException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
-import static spark.Spark.threadPool;
 
 public class Main {
     private static void createTable(Sql2o sql2o) {
@@ -61,90 +59,71 @@ public class Main {
 
         // TODO: Use threadPool(300);
 
-        post("/pushJSON", new JSONPush(sql2o));
-        post("/push", new CBORPush(sql2o));
-        get("/push", new BenchmarkPush(sql2o));
+        Push push = new Push(sql2o);
+        CBORFactory cborFactory = new CBORFactory();
+        ObjectMapper jsonMapper = new ObjectMapper();
+        ObjectMapper cborMapper = new ObjectMapper(cborFactory);
+
+
+        post("/pushJSON", (request, response) -> {
+            Push.Payload payload = jsonMapper.readValue(request.bodyAsBytes(),
+                    Push.Payload.class);
+            return push.push(payload, response);
+        });
+        post("/push", (request, response) -> {
+            Push.Payload payload = cborMapper.readValue(request.bodyAsBytes(),
+                    Push.Payload.class);
+            return push.push(payload, response);
+        });
         get("/checkIndexes", new CheckIndexes(sql2o));
     }
 }
 
 
-abstract class Push implements Route {
+class Push {
     static AtomicInteger insertCount = new AtomicInteger();
     Sql2o sql2o;
+    String insertStatement;
+    final int paramsNum = 10;
 
     public Push(Sql2o sql2o) {
         this.sql2o = sql2o;
+        generateParams();
     }
 
-    abstract Map<String, Object> getData(Request request) throws Exception;
+    private void generateParams() {
+        List<String> positionalParams = new ArrayList<>(paramsNum);
+        for (int i = 1; i <= paramsNum; i++) {
+            positionalParams.add(":p" + i);
+        }
+        String params = String.join(", ", positionalParams);
+        insertStatement = "INSERT INTO CHK VALUES (" + params + ")";
+        System.out.println(insertStatement);
+    }
 
-    @Override
-    public Object handle(Request request, Response response) {
+    public String push(Payload payload, Response response) {
         try (Connection con = sql2o.beginTransaction()) {
-            Map<String, Object> map = getData(request);
+            Query query = con.createQuery(insertStatement);
 
-            Query query = con.createQuery("INSERT INTO CHK VALUES (:number, :status)");
-            map.forEach(query::addParameter);
-            query.executeUpdate();
+            for (List<Object> row : payload.checks) {
+                row.add(payload.src);
+                query.withParams(row).addToBatch();
+            }
+
+            query.executeBatch();
             con.commit();
 
-            insertCount.incrementAndGet();
+            insertCount.addAndGet(payload.checks.size());
             return "";
         } catch (Exception e) {
             response.status(500);
             return "Error: " + e.toString();
         }
     }
-}
 
-class JSONPush extends Push {
-    public JSONPush(Sql2o sql2o) {
-        super(sql2o);
-    }
-
-    @Override
-    Map<String, Object> getData(Request request) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-
-        return mapper.readValue(request.bodyAsBytes(),
-                new TypeReference<Map<String, Object>>() {});
-    }
-}
-
-
-class CBORPush extends Push {
-    public CBORPush(Sql2o sql2o) {
-        super(sql2o);
-    }
-
-    @Override
-    Map<String, Object> getData(Request request) throws Exception {
-        CBORFactory f = new CBORFactory();
-        ObjectMapper mapper = new ObjectMapper(f);
-
-        return mapper.readValue(request.bodyAsBytes(),
-                new TypeReference<Map<String, Object>>() {});
-    }
-}
-
-
-class BenchmarkPush extends Push {
-    public BenchmarkPush(Sql2o sql2o) {
-        super(sql2o);
-    }
-
-    static AtomicInteger localCount = new AtomicInteger();
-
-    @Override
-    Map<String, Object> getData(Request request) throws Exception {
-        ObjectMapper mapper = new ObjectMapper();
-        int num = localCount.getAndIncrement();
-
-        String json = String.format("{\"number\":%d,\"status\":\"JSON\"}", num);
-
-        return mapper.readValue(json,
-                new TypeReference<Map<String, Object>>() {});
+    class Payload {
+        List<List<Object>> checks;
+        int src;
     }
 }
 
@@ -159,12 +138,12 @@ class CheckIndexes implements Route {
     @Override
     public Object handle(Request request, Response response) throws Exception {
         StringBuilder sb = new StringBuilder();
-        Table table = sql2o.open()
-                .createQuery("SELECT * FROM CHK ORDER BY NUMBER")
-                .executeAndFetchTable();
-        for (int i = 0; i < table.rows().size(); i++) {
-            Integer num = table.rows().get(i).getInteger("NUMBER");
-            if (num.equals(i)) {
+        List<Integer> numbers = sql2o.open()
+                .createQuery("SELECT NUMBER FROM CHK ORDER BY NUMBER")
+                .executeScalarList(Integer.class);
+        for (int i = 0; i < numbers.size(); i++) {
+            int num = numbers.get(i);
+            if (num == i) {
                 sb.append(String.format("OK! %d == %d\n", num, i));
             } else {
                 sb.append(String.format("Error! %d != %d\n", num, i));
