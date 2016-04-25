@@ -138,11 +138,11 @@ class CheckIndexes implements Route {
     @Override
     public Object handle(Request request, Response response) throws Exception {
         StringBuilder sb = new StringBuilder();
-        List<Integer> numbers = sql2o.open()
+        List<Long> numbers = sql2o.open()
                 .createQuery("SELECT NUMBER FROM CHK ORDER BY NUMBER")
-                .executeScalarList(Integer.class);
+                .executeScalarList(Long.class);
         for (int i = 0; i < numbers.size(); i++) {
-            int num = numbers.get(i);
+            long num = numbers.get(i);
             if (num == i) {
                 sb.append(String.format("OK! %d == %d\n", num, i));
             } else {
@@ -155,11 +155,11 @@ class CheckIndexes implements Route {
 }
 
 class CountInserts extends TimerTask {
-    int oldValue = 0;
+    long oldValue = 0;
 
     public void run() {
-        int newValue = Push.insertCount.get();
-        int diff = newValue - oldValue;
+        long newValue = Push.insertCount.get();
+        long diff = newValue - oldValue;
         if (diff != 0) {
             System.out.println("Inserts: " + diff);
         }
