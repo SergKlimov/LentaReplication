@@ -29,7 +29,7 @@ import static spark.Spark.post;
 public class Main {
     private static void createTable(Sql2o sql2o) {
         String sql =
-                "CREATE TABLE CHK (" +
+                "CREATE TABLE IF NOT EXISTS CHK (" +
                         "    number INT PRIMARY KEY," +
                         "    status VARCHAR(10) NOT NULL," +
                         "    id_store INTEGER" +
@@ -43,7 +43,7 @@ public class Main {
 
     private static HikariDataSource setUpDataSource() {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:hsqldb:mem:aname");
+        config.setJdbcUrl("jdbc:hsqldb:db/test");
         config.setUsername("sa");
         config.setPassword("");
 //        config.setJdbcUrl("jdbc:postgresql://localhost/test");
