@@ -43,9 +43,12 @@ public class Main {
 
     private static HikariDataSource setUpDataSource() {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl("jdbc:postgresql://localhost/test");
-        config.setUsername("test_user");
-        config.setPassword("qwerty");
+        config.setJdbcUrl("jdbc:hsqldb:mem:aname");
+        config.setUsername("sa");
+        config.setPassword("");
+//        config.setJdbcUrl("jdbc:postgresql://localhost/test");
+//        config.setUsername("test_user");
+//        config.setPassword("qwerty");
         return new HikariDataSource(config);
     }
 
