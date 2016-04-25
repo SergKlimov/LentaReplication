@@ -2,7 +2,7 @@
 
 ##Useful docs
 - Project description (currently not full) https://yadi.sk/i/M3jXId7Sr6Acm
-- Project design, confirmed by Lenta https://yadi.sk/i/1paFQ6GUr6AeB
+- Project design, confirmed by Lenta https://yadi.sk/i/ofptDFcerBP2N
 
 ##Tasks
 
