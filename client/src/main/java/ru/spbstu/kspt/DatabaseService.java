@@ -74,7 +74,7 @@ public class DatabaseService {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
       String buf = objectMapper.writeValueAsString(object);
-      return buf.substring(0, buf.length() - 2) + ",\"srcStore\": " + this.storeId + "}";
+      return buf.substring(0, buf.length() - 1) + ",\"srcStore\": " + this.storeId + "}";
     } catch (IOException e) {
       e.printStackTrace();
     }
