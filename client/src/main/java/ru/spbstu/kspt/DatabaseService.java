@@ -7,13 +7,15 @@ import org.sql2o.Sql2o;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
  * Класс для общения с БД
  */
-public class DatabaseService {
+class DatabaseService {
 
   private String db_url;
   private String db_user;
@@ -44,14 +46,16 @@ public class DatabaseService {
       e.printStackTrace();
     } finally {
       try {
-        inputStream.close();
+        if (inputStream != null) {
+          inputStream.close();
+        }
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
   }
 
-  public String getLastUpdatesByJson() {
+  String getLastUpdatesByJson() {
     Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
 
     String sql = "SELECT NUMBER, VALUE FROM BUFFER_TABLE";
@@ -60,9 +64,31 @@ public class DatabaseService {
 
     try {
       Connection con = sql2o.open();
-      List<Payload> payloads = con.createQuery(sql)
-          .executeAndFetch(Payload.class);
-      ret = convertObjectToJson(payloads);
+      List<Map<String, Object>> payloads = con.createQuery(sql)
+          .executeAndFetchTable().asList();
+
+      class ResultPayload {
+        public List<List<Object>> checks;
+        public String srcStore;
+
+        public ResultPayload() {
+          checks = new ArrayList<List<Object>>();
+        }
+      }
+
+      ResultPayload resultPayload = new ResultPayload();
+
+      for (Map<String, Object> map : payloads) {
+        List<Object> bufList = new ArrayList<Object>();
+        for (String key : map.keySet()) {
+          bufList.add(map.get(key));
+        }
+        resultPayload.checks.add(bufList);
+      }
+
+      resultPayload.srcStore = this.storeId;
+
+      ret = convertObjectToJson(resultPayload);
     } catch (Exception ex) {
       ex.printStackTrace();
     }
@@ -70,11 +96,11 @@ public class DatabaseService {
     return ret;
   }
 
-  public String convertObjectToJson(Object object) {
+  String convertObjectToJson(Object object) {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
-      String buf = objectMapper.writeValueAsString(object);
-      return buf.substring(0, buf.length() - 1) + ",\"srcStore\": " + this.storeId + "}";
+      return objectMapper.writeValueAsString(object);
+      //return buf.substring(0, buf.length() - 1) + ",\"srcStore\": " + this.storeId + "}";
     } catch (IOException e) {
       e.printStackTrace();
     }
