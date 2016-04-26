@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -61,25 +62,30 @@ public class DatabaseService {
 
     try {
       Connection con = sql2o.open();
-      List<Payload> payloads = con.createQuery(sql)
-          .executeScalarList(Payload.class);
+      List<Map<String,Object>> payloads = con.createQuery(sql)
+          .executeAndFetchTable().asList();
 
       class ResultPayload {
         public List<List<Object>> resultPayloads;
         public String srcStore;
 
-        public ResultPayload(List<Payload> payloads, String srcStore) {
+        public ResultPayload () {
           resultPayloads = new ArrayList<List<Object>>();
-
-          for (Payload payload: payloads
-               ) {
-            resultPayloads.add(payload.checks);
-          }
-          this.srcStore = srcStore;
         }
       }
 
-      ResultPayload resultPayload = new ResultPayload(payloads,this.storeId);
+      ResultPayload resultPayload = new ResultPayload();
+
+      for(Map<String,Object> map: payloads) {
+        List<Object> bufList = new ArrayList<Object>();
+        for (String key : map.keySet()) {
+          bufList.add(map.get(key));
+        }
+        resultPayload.resultPayloads.add(bufList);
+      }
+
+      resultPayload.srcStore = this.storeId;
+
       ret = convertObjectToJson(resultPayload);
     } catch (Exception ex) {
       ex.printStackTrace();
