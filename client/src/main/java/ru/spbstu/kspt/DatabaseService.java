@@ -15,7 +15,7 @@ import java.util.Properties;
 /**
  * Класс для общения с БД
  */
-public class DatabaseService {
+class DatabaseService {
 
   private String db_url;
   private String db_user;
@@ -46,14 +46,16 @@ public class DatabaseService {
       e.printStackTrace();
     } finally {
       try {
-        inputStream.close();
+        if (inputStream != null) {
+          inputStream.close();
+        }
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
   }
 
-  public String getLastUpdatesByJson() {
+  String getLastUpdatesByJson() {
     Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
 
     String sql = "SELECT NUMBER, VALUE FROM BUFFER_TABLE";
@@ -62,21 +64,21 @@ public class DatabaseService {
 
     try {
       Connection con = sql2o.open();
-      List<Map<String,Object>> payloads = con.createQuery(sql)
+      List<Map<String, Object>> payloads = con.createQuery(sql)
           .executeAndFetchTable().asList();
 
       class ResultPayload {
         public List<List<Object>> checks;
         public String srcStore;
 
-        public ResultPayload () {
+        public ResultPayload() {
           checks = new ArrayList<List<Object>>();
         }
       }
 
       ResultPayload resultPayload = new ResultPayload();
 
-      for(Map<String,Object> map: payloads) {
+      for (Map<String, Object> map : payloads) {
         List<Object> bufList = new ArrayList<Object>();
         for (String key : map.keySet()) {
           bufList.add(map.get(key));
@@ -94,7 +96,7 @@ public class DatabaseService {
     return ret;
   }
 
-  public String convertObjectToJson(Object object) {
+  String convertObjectToJson(Object object) {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
       return objectMapper.writeValueAsString(object);

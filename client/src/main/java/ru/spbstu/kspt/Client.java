@@ -10,16 +10,15 @@ import java.util.Properties;
 /**
  * Главный класс клиента
  */
-public class Client {
+class Client {
   private final OkHttpClient client = new OkHttpClient();
   private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
   private String serverAddress;
   private String portNumber;
-  private String storeId;
   private int pauseTime;
 
-  public Client() {
+  Client() {
     Properties properties = new Properties();
     String propFileName = "config.properties";
 
@@ -35,30 +34,32 @@ public class Client {
 
       this.serverAddress = properties.getProperty("server_address");
       this.portNumber = properties.getProperty("port_number");
-      this.storeId = properties.getProperty("store_id");
       this.pauseTime = Integer.valueOf(properties.getProperty("pause_time"));
 
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
       try {
-        inputStream.close();
+        if (inputStream != null) {
+          inputStream.close();
+        }
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
   }
 
-  public void run() {
+  void run() {
 
-    //Тестовая строка для отправки
+    /*//Тестовая строка для отправки
     String testString = "{\"checks\": [" +
         "[43, \"string1\"]" +
         "]," +
-        "\"srcStore\": " + this.storeId + "}";
+        "\"srcStore\": " + this.storeId + "}";*/
+    DatabaseService databaseService = new DatabaseService();
 
     try {
-      sendMessage(testString);
+      sendMessage(databaseService.getLastUpdatesByJson());
     } catch (Exception e) {
       e.printStackTrace();
     }
