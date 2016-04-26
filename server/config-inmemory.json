@@ -1,0 +1,7 @@
+{
+  "db": {
+    "url": "jdbc:hsqldb:db/test",
+    "user": "sa",
+    "pass": ""
+  }
+}
