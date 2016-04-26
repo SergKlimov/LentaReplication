@@ -1,9 +1,9 @@
-/**
- * Created by Artyom on 22.04.16.
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
  */
-
 package ru.spbstu.kspt;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
 import com.zaxxer.hikari.HikariConfig;
@@ -25,6 +25,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.Spark.get;
+import static spark.Spark.post;
+import static spark.Spark.get;
+import static spark.Spark.post;
+import static spark.Spark.get;
+import static spark.Spark.post;
+/**
+ *
+ * @author ann
+ */
 
 public class Main {
     private static void createTable(Sql2o sql2o) {
@@ -66,7 +76,8 @@ public class Main {
         Push push = new Push(sql2o);
         CBORFactory cborFactory = new CBORFactory();
         ObjectMapper jsonMapper = new ObjectMapper();
-        ObjectMapper cborMapper = new ObjectMapper(cborFactory);
+        ObjectMapper cborMapper = new ObjectMapper(cborFactory);        
+        Compare comp = new Compare(sql2o);
 
 
         post("/pushJSON", (request, response) -> {
@@ -80,6 +91,17 @@ public class Main {
             return push.push(payload, response);
         });
         get("/checkIndexes", new CheckIndexes(sql2o));
+       
+        post("/compare",  (request, response) -> {
+            PayloadForCompare payload= cborMapper.readValue(request.bodyAsBytes(),
+                    PayloadForCompare.class);
+            return comp.getDiff(payload, response);
+        });
+        post("/compareJSON",  (request, response) -> {
+            PayloadForCompare payload= jsonMapper.readValue(request.bodyAsBytes(),
+                    PayloadForCompare.class);
+            return comp.getDiff(payload, response);
+        });
     }
 }
 
