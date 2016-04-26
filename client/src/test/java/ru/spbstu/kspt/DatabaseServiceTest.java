@@ -10,7 +10,7 @@ public class DatabaseServiceTest {
   @Test
   public void convertObjectToJson() throws Exception {
     Payload payload = new Payload();
-    payload.checks = new ArrayList<List<Object>>();
+    payload.checks = new ArrayList<Object>();
 
     List<Object> test1 = new ArrayList<Object>();
     test1.add("hello");

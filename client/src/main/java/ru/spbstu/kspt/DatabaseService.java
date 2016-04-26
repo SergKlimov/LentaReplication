@@ -7,6 +7,7 @@ import org.sql2o.Sql2o;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -61,8 +62,25 @@ public class DatabaseService {
     try {
       Connection con = sql2o.open();
       List<Payload> payloads = con.createQuery(sql)
-          .executeAndFetch(Payload.class);
-      ret = convertObjectToJson(payloads);
+          .executeScalarList(Payload.class);
+
+      class ResultPayload {
+        public List<List<Object>> resultPayloads;
+        public String srcStore;
+
+        public ResultPayload(List<Payload> payloads, String srcStore) {
+          resultPayloads = new ArrayList<List<Object>>();
+
+          for (Payload payload: payloads
+               ) {
+            resultPayloads.add(payload.checks);
+          }
+          this.srcStore = srcStore;
+        }
+      }
+
+      ResultPayload resultPayload = new ResultPayload(payloads,this.storeId);
+      ret = convertObjectToJson(resultPayload);
     } catch (Exception ex) {
       ex.printStackTrace();
     }
@@ -73,8 +91,8 @@ public class DatabaseService {
   public String convertObjectToJson(Object object) {
     ObjectMapper objectMapper = new ObjectMapper();
     try {
-      String buf = objectMapper.writeValueAsString(object);
-      return buf.substring(0, buf.length() - 1) + ",\"srcStore\": " + this.storeId + "}";
+      return objectMapper.writeValueAsString(object);
+      //return buf.substring(0, buf.length() - 1) + ",\"srcStore\": " + this.storeId + "}";
     } catch (IOException e) {
       e.printStackTrace();
     }
