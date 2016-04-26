@@ -66,11 +66,11 @@ public class DatabaseService {
           .executeAndFetchTable().asList();
 
       class ResultPayload {
-        public List<List<Object>> resultPayloads;
+        public List<List<Object>> checks;
         public String srcStore;
 
         public ResultPayload () {
-          resultPayloads = new ArrayList<List<Object>>();
+          checks = new ArrayList<List<Object>>();
         }
       }
 
@@ -81,7 +81,7 @@ public class DatabaseService {
         for (String key : map.keySet()) {
           bufList.add(map.get(key));
         }
-        resultPayload.resultPayloads.add(bufList);
+        resultPayload.checks.add(bufList);
       }
 
       resultPayload.srcStore = this.storeId;
