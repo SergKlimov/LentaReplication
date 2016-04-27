@@ -25,3 +25,4 @@ Implemented simple main server agent (Artyom)
 - Pgbadger - parse db logs (https://github.com/dalibo/pgbadger)
 - Pljava - PSQL on Java (https://github.com/tada/pljava/wiki)
 - Sending sockets from PostgreSQL triggers with Python (https://gonzalo123.com/2012/11/26/sending-sockets-from-postgresql-triggers-with-python/)
+- About Postgres notify http://www.postgresql.org/docs/9.4/static/sql-notify.html
