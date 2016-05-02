@@ -3,7 +3,6 @@ package ru.spbstu.kspt;
 import com.squareup.okhttp.*;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
@@ -50,18 +49,16 @@ class Client {
   }
 
   void run() {
-
-    /*//Тестовая строка для отправки
-    String testString = "{\"checks\": [" +
-        "[43, \"string1\"]" +
-        "]," +
-        "\"srcStore\": " + this.storeId + "}";*/
     DatabaseService databaseService = new DatabaseService();
 
-    try {
-      sendMessage(databaseService.getLastUpdatesByJson());
-    } catch (Exception e) {
-      e.printStackTrace();
+    while (true) {
+      try {
+        sendMessage(databaseService.getLastUpdatesByJson());
+        databaseService.deleteLastSelectedObjects();
+        Thread.sleep(this.pauseTime);
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
     }
   }
 
@@ -71,8 +68,13 @@ class Client {
         .post(RequestBody.create(JSON, jsonMes))
         .build();
 
-    Response response = client.newCall(request).execute();
-    if (!response.isSuccessful())
-      throw new IOException("Unexpected code " + response + "Body: " + response.body().string());
+    while (true) {
+      Response response = client.newCall(request).execute();
+      if (response.isSuccessful())
+        break;
+      else
+        Thread.sleep(1000);
+//        throw new IOException("Unexpected code " + response + "Body: " + response.body().string());
+    }
   }
 }
