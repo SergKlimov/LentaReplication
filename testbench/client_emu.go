@@ -7,14 +7,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
+	"os/exec"
 )
 
 type Row []interface{}
 
-const numClients = 300
+const numClients = 1
 const secondsToRun = 10
 const bufferSize = 100
 const useCBOR = false
@@ -34,6 +34,8 @@ func client(data chan Row, storeNum int, wg *sync.WaitGroup, cborEnabled bool) {
 	var url string
 	var mimeType string
 	buff := new(bytes.Buffer)
+	tr := &http.Transport{MaxIdleConnsPerHost: 1}
+	client := &http.Client{Transport: tr}
 	if cborEnabled {
 		enc = codec.NewEncoder(buff, new(codec.CborHandle))
 		url = cborPushURL
@@ -59,8 +61,6 @@ func client(data chan Row, storeNum int, wg *sync.WaitGroup, cborEnabled bool) {
 			log.Fatal(err)
 			continue
 		}
-		tr := &http.Transport{MaxIdleConnsPerHost: 1}
-		client := &http.Client{Transport: tr}
 		resp, err := client.Post(url, mimeType, buff)
 		if err != nil {
 			log.Fatal(err)
@@ -102,8 +102,21 @@ func main() {
 }
 
 func fetcher(output chan Row, rowNum int) {
+	cmd := exec.Command("python3", "-c", "import main; main.print_json()")
+	input, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+	err = cmd.Start()
+	if err != nil {
+		log.Fatal(err)
+		panic(err)
+	}
+	dec := codec.NewDecoder(input, new(codec.JsonHandle))
 	for i := 0; i < rowNum; i++ {
-		row := Row{i, "hi" + strconv.Itoa(i)}
+		row := Row{}
+		dec.Decode(&row)
 		output <- row
 	}
 	close(output)

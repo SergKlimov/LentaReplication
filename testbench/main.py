@@ -3,6 +3,8 @@ import string
 import random
 import sys
 import psycopg2
+import itertools
+import json
 
 
 def main():
@@ -28,6 +30,17 @@ def main():
     else:
         print("No connect")
 
+
+def print_json():
+    for x in itertools.count(-1):
+        data = od_purchase(1, x)[0]
+        date_handler = lambda obj: (
+            obj.isoformat()
+            if isinstance(obj, datetime)
+            else None
+        )
+        encoded = json.dumps(data, default=date_handler)
+        sys.stdout.write(encoded)
 
 def od_purchase(num, old_id, start=datetime(2016, 5, 1), end=datetime(2016, 5, 31)):
     result = []
