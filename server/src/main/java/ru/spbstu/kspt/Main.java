@@ -14,6 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.PostgresQuirks;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.templateresolver.FileTemplateResolver;
+import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,13 +54,14 @@ public class Main {
 
     public static void main(String[] args) {
         Logger logger = LoggerFactory.getLogger(Main.class);
-        new Timer().schedule(new CountInserts(), 0, 1000);
+        Statistics stats = new Statistics(1);
+        new Timer().schedule(stats, 0, stats.getPeriodInMillis());
 
         CBORFactory cborFactory = new CBORFactory();
         ObjectMapper jsonMapper = new ObjectMapper();
         ObjectMapper cborMapper = new ObjectMapper(cborFactory);
 
-        Config config = null;
+        Config config;
         try {
             config = jsonMapper.readValue(new File("config.json"),
                     Config.class);
@@ -71,6 +75,7 @@ public class Main {
         Sql2o sql2o = new Sql2o(ds, new PostgresQuirks());
         createTable(sql2o);
         sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
+        sql2o.open().createQuery("VACUUM FULL ANALYZE");
 
         // TODO: Use threadPool(300);
 
@@ -100,6 +105,8 @@ public class Main {
                     PayloadForCompare.class);
             return comp.getDiff(payload, response);
         });
+
+        get("/stats", stats, new ThymeleafTemplateEngine(new ClassLoaderTemplateResolver()));
     }
 }
 

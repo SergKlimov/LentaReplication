@@ -6,11 +6,11 @@ import org.sql2o.Sql2o;
 import spark.Response;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Push {
-    static AtomicInteger insertCount = new AtomicInteger();
     Sql2o sql2o;
     String insertStatement;
     final int paramsNum = 3;
@@ -39,7 +39,8 @@ public class Push {
             }
             con.commit();
 
-            insertCount.addAndGet(payload.checks.size());
+            Statistics.insertCount.addAndGet(payload.checks.size());
+            Statistics.insertStats.put(payload.srcStore, new Date());
             return "";
         } catch (Exception e) {
             e.printStackTrace();
