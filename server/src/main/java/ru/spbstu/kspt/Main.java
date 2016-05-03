@@ -15,7 +15,6 @@ import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.PostgresQuirks;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
-import org.thymeleaf.templateresolver.FileTemplateResolver;
 import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 import java.io.File;
@@ -31,12 +30,27 @@ import static spark.Spark.post;
 
 public class Main {
     private static void createTable(Sql2o sql2o) {
-        String sql =
-                "CREATE TABLE IF NOT EXISTS CHK (" +
-                        "    number INT PRIMARY KEY," +
-                        "    status VARCHAR(10) NOT NULL," +
-                        "    id_store INTEGER" +
-                        ")";
+        String sql = "CREATE TABLE IF NOT EXISTS CHK (" +
+                "id BIGINT," +
+                "datecommit TIMESTAMP WITHOUT TIME ZONE," +
+                "datecreate TIMESTAMP WITHOUT TIME ZONE," +
+                "fiscaldocnum CHARACTER VARYING(64)," +
+                "numberfield BIGINT," +
+                "id_session BIGINT," +
+                "id_shift BIGINT," +
+                "checkstatus INTEGER," +
+                "checksumend BIGINT," +
+                "checksumstart BIGINT," +
+                "discountvaluetotal BIGINT," +
+                "operationtype BOOLEAN," +
+                "receivedate TIMESTAMP WITHOUT TIME ZONE," +
+                "id_purchaseref BIGINT," +
+                "set5checknumber CHARACTER VARYING(64)," +
+                "client_guid BIGINT," +
+                "clienttype SMALLINT," +
+                "denyprinttodocuments BOOLEAN," +
+                "id_store INTEGER" +
+                ");";
 
         try (Connection con = sql2o.beginTransaction()) {
             con.createQuery(sql).executeUpdate();

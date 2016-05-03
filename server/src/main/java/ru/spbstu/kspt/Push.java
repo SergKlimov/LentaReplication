@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Push {
     Sql2o sql2o;
     String insertStatement;
-    final int paramsNum = 3;
+    final int paramsNum = 19;
 
     public Push(Sql2o sql2o) {
         this.sql2o = sql2o;
