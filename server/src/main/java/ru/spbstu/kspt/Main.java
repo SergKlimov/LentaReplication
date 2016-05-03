@@ -74,8 +74,6 @@ public class Main {
 
         Sql2o sql2o = new Sql2o(ds, new PostgresQuirks());
         createTable(sql2o);
-        sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
-        sql2o.open().createQuery("VACUUM FULL ANALYZE");
 
         // TODO: Use threadPool(300);
 
@@ -107,6 +105,12 @@ public class Main {
         });
 
         get("/stats", stats, new ThymeleafTemplateEngine(new ClassLoaderTemplateResolver()));
+
+        post("/deleteAll", (request, response) -> {
+            sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
+            sql2o.open().createQuery("VACUUM FULL ANALYZE");
+            return "";
+        });
     }
 }
 
