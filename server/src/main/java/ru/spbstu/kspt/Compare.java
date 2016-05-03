@@ -32,7 +32,8 @@ class Compare {
 
     public String getDiff(PayloadForCompare payload, Response response) {
         List<Long> numbers = sql2o.open()
-                .createQuery("SELECT*FROM CHK WHERE SRCID = "+ payload.srcStore)
+                .createQuery("SELECT * FROM CHK WHERE id_store = :store")
+                .addParameter("store", payload.srcStore)
                 .executeScalarList(Long.class);
         return generateDiff(payload.checkIds, numbers);
     }
