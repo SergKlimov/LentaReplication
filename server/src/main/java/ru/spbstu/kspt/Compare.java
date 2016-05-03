@@ -22,14 +22,12 @@ class Compare {
         this.sql2o = sql2o;
     }
 
-    private String generateDiff(List listFromRequest, List listFromDb) {
-        Set s1 = new HashSet(listFromRequest);
-        Set s2 = new HashSet(listFromDb);
-        Set s3 = new HashSet(s1);
-        s3.removeAll(s2);
-        s2.removeAll(s1);
-        s2.addAll(s3);  
-        return s2.toString();
+    private String generateDiff(List<Long> listFromRequest, List<Long> listFromDb) {
+        Set<Long> setFromDb = new HashSet<>(listFromDb);
+        for (Long id: listFromRequest) {
+            setFromDb.remove(id);
+        }
+        return setFromDb.toString();
     }
 
     public String getDiff(PayloadForCompare payload, Response response) {
