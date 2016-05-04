@@ -23,7 +23,7 @@ def push(process_number):
                         "JSON" + str(num)
                     ]
                 ],
-            "srcStore": 1
+            "srcStore": process_number
         }
         r = requests.post("http://127.0.0.1:4567/pushJSON", json=payload)
         print(r.text)
@@ -32,9 +32,10 @@ def push(process_number):
         # time.sleep(1 - (finish - start))
 
 
-process_count = 2
+process_count = 10
 iterations = process_count
-push(1)
+for x in range(1, 11):
+    push(x)
 
 # for x in range(process_count):
 #     p = multiprocessing.Process(target=push, args=(x,))

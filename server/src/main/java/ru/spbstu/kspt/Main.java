@@ -14,6 +14,8 @@ import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Sql2o;
 import org.sql2o.quirks.PostgresQuirks;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,12 +30,27 @@ import static spark.Spark.post;
 
 public class Main {
     private static void createTable(Sql2o sql2o) {
-        String sql =
-                "CREATE TABLE IF NOT EXISTS CHK (" +
-                        "    number INT PRIMARY KEY," +
-                        "    status VARCHAR(10) NOT NULL," +
-                        "    id_store INTEGER" +
-                        ")";
+        String sql = "CREATE TABLE IF NOT EXISTS CHK (" +
+                "id BIGINT," +
+                "datecommit TIMESTAMP WITHOUT TIME ZONE," +
+                "datecreate TIMESTAMP WITHOUT TIME ZONE," +
+                "fiscaldocnum CHARACTER VARYING(64)," +
+                "numberfield BIGINT," +
+                "id_session BIGINT," +
+                "id_shift BIGINT," +
+                "checkstatus INTEGER," +
+                "checksumend BIGINT," +
+                "checksumstart BIGINT," +
+                "discountvaluetotal BIGINT," +
+                "operationtype BOOLEAN," +
+                "receivedate TIMESTAMP WITHOUT TIME ZONE," +
+                "id_purchaseref BIGINT," +
+                "set5checknumber CHARACTER VARYING(64)," +
+                "client_guid BIGINT," +
+                "clienttype SMALLINT," +
+                "denyprinttodocuments BOOLEAN," +
+                "id_store INTEGER" +
+                ");";
 
         try (Connection con = sql2o.beginTransaction()) {
             con.createQuery(sql).executeUpdate();
@@ -51,13 +68,14 @@ public class Main {
 
     public static void main(String[] args) {
         Logger logger = LoggerFactory.getLogger(Main.class);
-        new Timer().schedule(new CountInserts(), 0, 1000);
+        Statistics stats = new Statistics(1);
+        new Timer().schedule(stats, 0, stats.getPeriodInMillis());
 
         CBORFactory cborFactory = new CBORFactory();
         ObjectMapper jsonMapper = new ObjectMapper();
         ObjectMapper cborMapper = new ObjectMapper(cborFactory);
 
-        Config config = null;
+        Config config;
         try {
             config = jsonMapper.readValue(new File("config.json"),
                     Config.class);
@@ -70,7 +88,6 @@ public class Main {
 
         Sql2o sql2o = new Sql2o(ds, new PostgresQuirks());
         createTable(sql2o);
-        sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
 
         // TODO: Use threadPool(300);
 
@@ -99,6 +116,14 @@ public class Main {
             PayloadForCompare payload = jsonMapper.readValue(request.bodyAsBytes(),
                     PayloadForCompare.class);
             return comp.getDiff(payload, response);
+        });
+
+        get("/stats", stats, new ThymeleafTemplateEngine(new ClassLoaderTemplateResolver()));
+
+        post("/deleteAll", (request, response) -> {
+            sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
+            sql2o.open().createQuery("VACUUM FULL ANALYZE");
+            return "";
         });
     }
 }
