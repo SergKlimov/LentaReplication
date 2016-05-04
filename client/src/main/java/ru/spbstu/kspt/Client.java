@@ -53,8 +53,11 @@ class Client {
 
     while (true) {
       try {
-        sendMessage(databaseService.getLastUpdatesByJson());
-        databaseService.deleteLastSelectedObjects();
+        String jsonString = databaseService.getLastUpdatesByJson();
+        if (!jsonString.equals("")) {
+          sendMessage(jsonString);
+          databaseService.deleteLastSelectedObjects();
+        }
         Thread.sleep(this.pauseTime);
       } catch (Exception e) {
         e.printStackTrace();

@@ -78,13 +78,15 @@ class DatabaseService {
         .append(this.table_name);
 
     String sql = stringBuilder.toString();
-
     String ret = "";
 
     try {
       Connection con = sql2o.open();
       List<Map<String, Object>> payloads = con.createQuery(sql)
           .executeAndFetchTable().asList();
+
+      if (payloads.isEmpty())
+        return ret;
 
       class ResultPayload {
         public List<List<Object>> checks;
