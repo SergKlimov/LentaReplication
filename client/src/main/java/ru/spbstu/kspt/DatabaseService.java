@@ -21,11 +21,10 @@ class DatabaseService {
   private String const_table_name;
   private String storeId;
 
-  private final List<String> rowList = new ArrayList<String>(Arrays.asList("id", "datecommit"));
-          /*"datecreate",
+  private final List<String> rowList = new ArrayList<String>(Arrays.asList("id", "datecommit", "datecreate",
       "fiscaldocnum", "numberfield", "id_session", "id_shift", "checkstatus", "checksumend", "checksumstart",
       "discountvaluetotal", "operationtype", "receivedate", "id_purchaseref", "set5checknumber", "client_guid",
-      "clienttype", "denyprinttodocuments"*/
+      "clienttype", "denyprinttodocuments"));
 
 
   private List<Object> lastIdList;

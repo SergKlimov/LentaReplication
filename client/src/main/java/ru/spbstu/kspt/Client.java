@@ -67,7 +67,7 @@ class Client {
           }
     }
    
-    /* check data (call once per day)
+    /* test check data (must be called once a day)
     try {
         String jsonString = databaseService.getAllChecksPerDayByJson();
         if (!jsonString.equals("")) {
