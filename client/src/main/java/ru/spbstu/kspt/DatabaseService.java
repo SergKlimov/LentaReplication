@@ -18,15 +18,26 @@ class DatabaseService {
   private String db_user;
   private String dp_password;
   private String table_name;
-
+  private String const_table_name;
   private String storeId;
 
-  private final List<String> rowList = new ArrayList<String>(Arrays.asList("id", "datecommit", "datecreate",
+  private final List<String> rowList = new ArrayList<String>(Arrays.asList("id", "datecommit"));
+          /*"datecreate",
       "fiscaldocnum", "numberfield", "id_session", "id_shift", "checkstatus", "checksumend", "checksumstart",
       "discountvaluetotal", "operationtype", "receivedate", "id_purchaseref", "set5checknumber", "client_guid",
-      "clienttype", "denyprinttodocuments"));
+      "clienttype", "denyprinttodocuments"*/
+
 
   private List<Object> lastIdList;
+
+  class ResultPayload {
+    public List<List<Object>> checks;
+    public String srcStore;
+
+    public ResultPayload() {
+        checks = new ArrayList<List<Object>>();
+    }
+  }
 
   public DatabaseService() {
     lastIdList = new ArrayList<Object>();
@@ -48,6 +59,7 @@ class DatabaseService {
       this.dp_password = properties.getProperty("db_pass");
       this.storeId = properties.getProperty("store_id");
       this.table_name = properties.getProperty("table_name");
+      this.const_table_name = properties.getProperty("const_table_name");
 
     } catch (Exception e) {
       e.printStackTrace();
@@ -87,16 +99,7 @@ class DatabaseService {
 
       if (payloads.isEmpty())
         return ret;
-
-      class ResultPayload {
-        public List<List<Object>> checks;
-        public String srcStore;
-
-        public ResultPayload() {
-          checks = new ArrayList<List<Object>>();
-        }
-      }
-
+      
       ResultPayload resultPayload = new ResultPayload();
 
       for (Map<String, Object> map : payloads) {
@@ -145,5 +148,81 @@ class DatabaseService {
       }
     }
     lastIdList.clear();
+  }
+  
+  String getAllChecksPerDayByJson() {
+    Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
+
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("SELECT id FROM ")
+        .append(this.const_table_name);
+
+    String sql = stringBuilder.toString();
+    String ret = "";
+    try {
+        Connection con = sql2o.open();
+        List<Long> payloads = con.createQuery(sql)
+            .executeScalarList(Long.class);
+        if (payloads.isEmpty())
+            return ret;
+      
+        PayloadForCompare payloadForCompare = new PayloadForCompare(payloads, this.storeId);
+        ret = convertObjectToJson(payloadForCompare);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+    return ret;
+  }
+  
+   String getEntryByIdByJson(ArrayList<Integer> arr) {
+    Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
+
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("SELECT ");
+
+    for (int i = 0; i < rowList.size() - 1; i++) {
+      stringBuilder.append(rowList.get(i))
+          .append(", ");
+    }
+
+    stringBuilder.append(rowList.get(rowList.size() - 1))
+        .append(" FROM ")
+        .append(this.const_table_name)
+        .append(" WHERE ID=ANY(ARRAY")
+        .append(arr)
+        .append(")");
+    String sql = stringBuilder.toString();
+    String ret = "";
+
+    try {
+      Connection con = sql2o.open();
+      List<Map<String, Object>> payloads = con.createQuery(sql)
+          .executeAndFetchTable().asList();
+
+      if (payloads.isEmpty())
+        return ret;
+
+      ResultPayload resultPayload = new ResultPayload();
+
+      for (Map<String, Object> map : payloads) {
+        List<Object> bufList = new ArrayList<Object>();
+        for (String key : rowList) {
+          bufList.add(map.get(key));
+        }
+        resultPayload.checks.add(bufList);
+      }
+
+      for (Map<String, Object> map : payloads) {
+        lastIdList.add(map.get("id"));
+      }
+
+      resultPayload.srcStore = this.storeId;
+
+      ret = convertObjectToJson(resultPayload);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
+    return ret;
   }
 }

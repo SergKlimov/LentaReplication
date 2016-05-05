@@ -5,6 +5,9 @@ import com.squareup.okhttp.*;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
  * Главный класс клиента
@@ -50,19 +53,34 @@ class Client {
 
   void run() {
     DatabaseService databaseService = new DatabaseService();
-
+    
     while (true) {
-      try {
-        String jsonString = databaseService.getLastUpdatesByJson();
-        if (!jsonString.equals("")) {
-          sendMessage(jsonString);
-          databaseService.deleteLastSelectedObjects();
-        }
-        Thread.sleep(this.pauseTime);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+          try {
+            String jsonString = databaseService.getLastUpdatesByJson();
+            if (!jsonString.equals("")) {
+              sendMessage(jsonString);
+              databaseService.deleteLastSelectedObjects();
+            }
+            Thread.sleep(this.pauseTime);         
+          } catch (Exception e) {
+            e.printStackTrace();
+          }
     }
+   
+    /* check data (call once per day)
+    try {
+        String jsonString = databaseService.getAllChecksPerDayByJson();
+        if (!jsonString.equals("")) {
+            ArrayList<Integer> returnChecks = new ArrayList<Integer>(checkData(jsonString));
+            if(!returnChecks.isEmpty()) {
+                String jsonStringNew = databaseService.getEntryByIdByJson(returnChecks);
+                sendMessage(jsonStringNew);
+            }
+        } 
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    */
   }
 
   private void sendMessage(String jsonMes) throws Exception {
@@ -78,6 +96,26 @@ class Client {
       else
         Thread.sleep(1000);
 //        throw new IOException("Unexpected code " + response + "Body: " + response.body().string());
+    }
+  }
+  
+  private ArrayList<Integer> checkData(String jsonMes) throws Exception {
+    Request request = new Request.Builder()
+        .url("http://" + this.serverAddress + ":" + this.portNumber + "/compareJSON")
+        .post(RequestBody.create(JSON, jsonMes))
+        .build();
+    while (true) {
+        Response response = client.newCall(request).execute();
+        if (response.isSuccessful()) {
+            String responseStr = response.body().string().replace("[", "").replace("]", "").replace(",", "");
+            Scanner scanner = new Scanner(responseStr);
+            ArrayList<Integer> checkIds = new ArrayList<Integer>();
+            while (scanner.hasNextInt()) 
+                checkIds.add(scanner.nextInt());
+            return checkIds;
+        }      
+        else
+          Thread.sleep(1000);
     }
   }
 }
