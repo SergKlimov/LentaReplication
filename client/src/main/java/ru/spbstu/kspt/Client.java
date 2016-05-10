@@ -60,8 +60,8 @@ class Client {
     DatabaseService databaseService = new DatabaseService();
     // проверка данных (метод CheckData вызывается каждый день в 24:00:00)
     Calendar calendar = Calendar.getInstance();
-    calendar.set(Calendar.HOUR_OF_DAY, 9);
-    calendar.set(Calendar.MINUTE, 55);
+    calendar.set(Calendar.HOUR_OF_DAY, 24);
+    calendar.set(Calendar.MINUTE, 00);
     calendar.set(Calendar.SECOND, 00);
     Date time = calendar.getTime();
     Timer timer = new Timer();
