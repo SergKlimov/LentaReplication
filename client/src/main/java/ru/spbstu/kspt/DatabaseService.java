@@ -21,11 +21,12 @@ class DatabaseService {
   private String const_table_name;
   private String storeId;
 
-  private final List<String> rowList = new ArrayList<String>(Arrays.asList("id", "datecommit", "datecreate",
+  private final List<String> rowList = new ArrayList<String>(Arrays.asList("id", "datecommit"));
+  /*, "datecreate",
       "fiscaldocnum", "numberfield", "id_session", "id_shift", "checkstatus", "checksumend", "checksumstart",
       "discountvaluetotal", "operationtype", "receivedate", "id_purchaseref", "set5checknumber", "client_guid",
       "clienttype", "denyprinttodocuments"));
-
+*/
 
   private List<Object> lastIdList;
 
@@ -154,7 +155,9 @@ class DatabaseService {
 
     StringBuilder stringBuilder = new StringBuilder();
     stringBuilder.append("SELECT id FROM ")
-        .append(this.const_table_name);
+        .append(this.const_table_name)
+        .append(" WHERE datecommit >= NOW() - '1 day'::INTERVAL");
+     
 
     String sql = stringBuilder.toString();
     String ret = "";
@@ -187,12 +190,11 @@ class DatabaseService {
     stringBuilder.append(rowList.get(rowList.size() - 1))
         .append(" FROM ")
         .append(this.const_table_name)
-        .append(" WHERE ID=ANY(ARRAY")
+        .append(" WHERE id=ANY(ARRAY")
         .append(arr)
         .append(")");
     String sql = stringBuilder.toString();
     String ret = "";
-
     try {
       Connection con = sql2o.open();
       List<Map<String, Object>> payloads = con.createQuery(sql)
@@ -225,3 +227,4 @@ class DatabaseService {
     return ret;
   }
 }
+

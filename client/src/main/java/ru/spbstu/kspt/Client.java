@@ -7,7 +7,12 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Главный класс клиента
@@ -53,6 +58,14 @@ class Client {
 
   void run() {
     DatabaseService databaseService = new DatabaseService();
+    // проверка данных (метод CheckData вызывается каждый день в 24:00:00)
+    Calendar calendar = Calendar.getInstance();
+    calendar.set(Calendar.HOUR_OF_DAY, 9);
+    calendar.set(Calendar.MINUTE, 55);
+    calendar.set(Calendar.SECOND, 00);
+    Date time = calendar.getTime();
+    Timer timer = new Timer();
+    timer.schedule(new CheckData(databaseService), time, TimeUnit.DAYS.toMillis(1));     
     
     while (true) {
           try {
@@ -66,21 +79,6 @@ class Client {
             e.printStackTrace();
           }
     }
-   
-    /* test check data (must be called once a day)
-    try {
-        String jsonString = databaseService.getAllChecksPerDayByJson();
-        if (!jsonString.equals("")) {
-            ArrayList<Integer> returnChecks = new ArrayList<Integer>(checkData(jsonString));
-            if(!returnChecks.isEmpty()) {
-                String jsonStringNew = databaseService.getEntryByIdByJson(returnChecks);
-                sendMessage(jsonStringNew);
-            }
-        } 
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-    */
   }
 
   private void sendMessage(String jsonMes) throws Exception {
@@ -99,7 +97,30 @@ class Client {
     }
   }
   
-  private ArrayList<Integer> checkData(String jsonMes) throws Exception {
+  public class CheckData extends TimerTask {
+     DatabaseService databaseService;
+
+    public CheckData(DatabaseService databaseService) {
+        this.databaseService = databaseService;
+    }
+
+    public void run() {
+        try {
+            String jsonString = databaseService.getAllChecksPerDayByJson();
+            if (!jsonString.equals("")) {
+                ArrayList<Integer> returnChecks = new ArrayList<Integer>(sendMessageCompare(jsonString));
+                if(!returnChecks.isEmpty()) {
+                    String jsonStringNew = databaseService.getEntryByIdByJson(returnChecks);
+                    sendMessage(jsonStringNew);
+                }
+            } 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }        
+    }
+  }
+  
+  private ArrayList<Integer> sendMessageCompare(String jsonMes) throws Exception {
     Request request = new Request.Builder()
         .url("http://" + this.serverAddress + ":" + this.portNumber + "/compareJSON")
         .post(RequestBody.create(JSON, jsonMes))
