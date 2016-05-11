@@ -72,6 +72,58 @@ class DatabaseService {
     }
   }
 
+  public String getAddedData(int count){
+    Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
+
+    StringBuilder stringBuilder = new StringBuilder();
+    stringBuilder.append("SELECT ");
+
+    for (int i = 0; i < rowList.size() - 1; i++) {
+      stringBuilder.append(rowList.get(i))
+              .append(", ");
+    }
+
+    stringBuilder.append(rowList.get(rowList.size() - 1))
+            .append(" FROM ")
+            .append(this.table_name)
+            .append(" ORDER BY ID DESC LIMIT ")
+            .append(count);
+
+    String sql = stringBuilder.toString();
+    String ret = "";
+
+    try {
+      Connection con = sql2o.open();
+      List<Map<String, Object>> payloads = con.createQuery(sql)
+              .executeAndFetchTable().asList();
+
+      if (payloads.isEmpty())
+        return ret;
+
+      ResultPayload resultPayload = new ResultPayload();
+
+      for (Map<String, Object> map : payloads) {
+        List<Object> bufList = new ArrayList<Object>();
+        for (String key : rowList) {
+          bufList.add(map.get(key));
+        }
+        resultPayload.checks.add(bufList);
+      }
+
+      for (Map<String, Object> map : payloads) {
+        lastIdList.add(map.get("id"));
+      }
+
+      resultPayload.srcStore = this.storeId;
+
+      ret = convertObjectToJson(resultPayload);
+    } catch (Exception ex) {
+      ex.printStackTrace();
+    }
+
+    return ret;
+  }
+
   String getLastUpdatesByJson() {
     Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
 
