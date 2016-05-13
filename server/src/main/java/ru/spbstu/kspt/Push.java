@@ -31,8 +31,7 @@ class Push {
             positionalParams.add(":p" + i);
         }
         String params = String.join(", ", positionalParams);
-        insertStatement = String.format("INSERT INTO CHK VALUES (%s, :store) " +
-                "WHERE NOT EXISTS SELECT id FROM CHK WHERE id = :id);", params);
+        insertStatement = String.format("INSERT INTO CHK VALUES (%s, :store);", params);
     }
 
     String push(Payload payload, Response response) {
@@ -48,7 +47,6 @@ class Push {
                 }
                 query.withParams(row)
                         .addParameter("store", payload.srcStore)
-                        .addParameter("id", row[0])
                         .executeUpdate();
             }
             con.commit();

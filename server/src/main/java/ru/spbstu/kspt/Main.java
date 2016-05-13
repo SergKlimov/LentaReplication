@@ -20,6 +20,8 @@ import static spark.Spark.get;
 import static spark.Spark.post;
 
 public class Main {
+    static final Logger logger = LoggerFactory.getLogger(Main.class);
+
     private static void createTable(Sql2o sql2o) {
         String sql = "CREATE TABLE IF NOT EXISTS CHK (" +
                 "id BIGINT," +
@@ -74,7 +76,7 @@ public class Main {
             logger.error("Can't read config: {}", e.toString());
             return;
         }
-        System.out.println(config);
+        logger.info("Using config: {}", config);
 
         HikariDataSource ds = setUpDataSource(config);
 

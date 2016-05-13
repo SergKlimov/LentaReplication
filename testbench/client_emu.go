@@ -14,7 +14,7 @@ import (
 
 type Row []interface{}
 
-const numClients = 300
+const numClients = 1
 const secondsToRun = 10
 const bufferSize = 100
 const useCBOR = false
