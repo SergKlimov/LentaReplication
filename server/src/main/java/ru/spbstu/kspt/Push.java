@@ -39,7 +39,7 @@ class Push {
             Query query = con.createQuery(insertStatement);
 
             for (Object row[]: payload.checks) {
-                logger.debug("Pushing row: ", Arrays.toString(row));
+                logger.debug("Pushing row: {}", Arrays.toString(row));
                 for (int dateColumn: config.getDateColumns()) {
                     long timestamp = (long) row[dateColumn];
                     row[dateColumn] = new java.sql.Date(timestamp);
