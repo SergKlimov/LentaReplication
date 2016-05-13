@@ -35,7 +35,7 @@ def print_json():
     for x in itertools.count(-1):
         data = generateQuery(x)
         date_handler = lambda obj: (
-            obj.isoformat()
+            int(obj.timestamp())
             if isinstance(obj, datetime)
             else None
         )
