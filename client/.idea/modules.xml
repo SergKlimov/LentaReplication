@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/LentaClient.iml" filepath="$PROJECT_DIR$/LentaClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LentaClient.iml" filepath="$PROJECT_DIR$/.idea/modules/LentaClient.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LentaClient_main.iml" filepath="$PROJECT_DIR$/.idea/modules/LentaClient_main.iml" group="LentaClient" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/LentaClient_test.iml" filepath="$PROJECT_DIR$/.idea/modules/LentaClient_test.iml" group="LentaClient" />
     </modules>
   </component>
 </project>
