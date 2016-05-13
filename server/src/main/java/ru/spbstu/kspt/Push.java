@@ -18,7 +18,6 @@ class Push {
     private String insertStatement;
     private Config config;
     private final Logger logger = LoggerFactory.getLogger(Push.class);
-    private String storeParameter;
 
     Push(Sql2o sql2o, Config config) {
         this.sql2o = sql2o;
@@ -28,12 +27,12 @@ class Push {
 
     private void generateParams(int paramsNum) {
         List<String> positionalParams = new ArrayList<>(paramsNum);
-        for (int i = 1; i <= paramsNum; i++) {
+        for (int i = 1; i < paramsNum; i++) {
             positionalParams.add(":p" + i);
         }
         String params = String.join(", ", positionalParams);
-        insertStatement = "INSERT INTO CHK VALUES (" + params + ")";
-        storeParameter = "p" + paramsNum;
+        insertStatement = String.format("INSERT INTO CHK VALUES (%s, :store) " +
+                "WHERE NOT EXISTS SELECT id FROM CHK WHERE id = :id);", params);
     }
 
     String push(Payload payload, Response response) {
@@ -48,7 +47,8 @@ class Push {
                     row[dateColumn] = new java.sql.Date(date);
                 }
                 query.withParams(row)
-                        .addParameter(storeParameter, payload.srcStore)
+                        .addParameter("store", payload.srcStore)
+                        .addParameter("id", row[0])
                         .executeUpdate();
             }
             con.commit();

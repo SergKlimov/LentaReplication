@@ -1,5 +1,5 @@
 {
-  "dburl": "jdbc:hsqldb:db/test",
+  "dburl": "jdbc:hsqldb:db/test;MODE=PostgreSQL",
   "dbusername": "sa",
   "dbpassword": "",
   "columnNum": 19,
