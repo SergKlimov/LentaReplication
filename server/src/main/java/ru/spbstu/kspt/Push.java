@@ -1,5 +1,7 @@
 package ru.spbstu.kspt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.sql2o.Connection;
 import org.sql2o.Query;
 import org.sql2o.Sql2o;
@@ -15,7 +17,8 @@ class Push {
     private Sql2o sql2o;
     private String insertStatement;
     private Config config;
-//    private final int paramsNum = 19;
+    private final Logger logger = LoggerFactory.getLogger(Push.class);
+    private String storeParameter;
 
     Push(Sql2o sql2o, Config config) {
         this.sql2o = sql2o;
@@ -30,24 +33,27 @@ class Push {
         }
         String params = String.join(", ", positionalParams);
         insertStatement = "INSERT INTO CHK VALUES (" + params + ")";
+        storeParameter = "p" + paramsNum;
     }
 
     String push(Payload payload, Response response) {
         try (Connection con = sql2o.beginTransaction()) {
             Query query = con.createQuery(insertStatement);
 
-            for (List<Object> row: payload.checks) {
+            for (Object row[]: payload.checks) {
+                logger.debug("Pushing row: ", Arrays.toString(row));
                 for (int dateColumn: config.getDateColumns()) {
-                    double timestamp = (double) row.get(dateColumn);
+                    double timestamp = (double) row[dateColumn];
                     long date = (long) timestamp;
-                    row.set(dateColumn, new java.sql.Date(date));
+                    row[dateColumn] = new java.sql.Date(date);
                 }
-                row.add(payload.srcStore);
-                query.withParams(row.toArray()).executeUpdate();
+                query.withParams(row)
+                        .addParameter(storeParameter, payload.srcStore)
+                        .executeUpdate();
             }
             con.commit();
 
-            Statistics.insertCount.addAndGet(payload.checks.size());
+            Statistics.insertCount.addAndGet(payload.checks.length);
             Statistics.insertStats.put(payload.srcStore, new Date());
             return "";
         } catch (Exception e) {
