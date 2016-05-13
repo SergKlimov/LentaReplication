@@ -39,11 +39,10 @@ class Push {
             Query query = con.createQuery(insertStatement);
 
             for (Object row[]: payload.checks) {
-                logger.debug("Pushing row: ", Arrays.toString(row));
+                logger.debug("Pushing row: {}", Arrays.toString(row));
                 for (int dateColumn: config.getDateColumns()) {
-                    double timestamp = (double) row[dateColumn];
-                    long date = (long) timestamp;
-                    row[dateColumn] = new java.sql.Date(date);
+                    Long timestamp = ((Number)row[dateColumn]).longValue();
+                    row[dateColumn] = new java.sql.Date(timestamp);
                 }
                 query.withParams(row)
                         .addParameter("store", payload.srcStore)
