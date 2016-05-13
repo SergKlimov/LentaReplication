@@ -41,7 +41,7 @@ class Push {
             for (Object row[]: payload.checks) {
                 logger.debug("Pushing row: {}", Arrays.toString(row));
                 for (int dateColumn: config.getDateColumns()) {
-                    long timestamp = (long) row[dateColumn];
+                    Long timestamp = ((Number)row[dateColumn]).longValue();
                     row[dateColumn] = new java.sql.Date(timestamp);
                 }
                 query.withParams(row)
