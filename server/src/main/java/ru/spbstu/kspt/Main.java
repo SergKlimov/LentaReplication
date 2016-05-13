@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ru.spbstu.kspt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,10 +18,6 @@ import java.util.Timer;
 
 import static spark.Spark.get;
 import static spark.Spark.post;
-
-/**
- * @author ann
- */
 
 public class Main {
     private static void createTable(Sql2o sql2o) {
@@ -60,9 +51,9 @@ public class Main {
 
     private static HikariDataSource setUpDataSource(Config config) {
         HikariConfig dbConfig = new HikariConfig();
-        dbConfig.setJdbcUrl(config.getDb().getUrl());
-        dbConfig.setUsername(config.getDb().getUser());
-        dbConfig.setPassword(config.getDb().getPass());
+        dbConfig.setJdbcUrl(config.getDBUrl());
+        dbConfig.setUsername(config.getDBUsername());
+        dbConfig.setPassword(config.getDBPassword());
         return new HikariDataSource(dbConfig);
     }
 
@@ -83,6 +74,7 @@ public class Main {
             logger.error("Can't read config: {}", e.toString());
             return;
         }
+        System.out.println(config);
 
         HikariDataSource ds = setUpDataSource(config);
 
@@ -91,7 +83,7 @@ public class Main {
 
         // TODO: Use threadPool(300);
 
-        Push push = new Push(sql2o);
+        Push push = new Push(sql2o, config);
         Compare comp = new Compare(sql2o);
 
 
@@ -122,7 +114,7 @@ public class Main {
 
         post("/deleteAll", (request, response) -> {
             sql2o.open().createQuery("DELETE FROM CHK").executeUpdate();
-            sql2o.open().createQuery("VACUUM FULL ANALYZE");
+            // sql2o.open().createQuery("VACUUM FULL ANALYZE");
             return "";
         });
     }

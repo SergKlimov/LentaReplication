@@ -6,21 +6,24 @@ import org.sql2o.Sql2o;
 import spark.Response;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class Push {
-    Sql2o sql2o;
-    String insertStatement;
-    final int paramsNum = 19;
+class Push {
+    private Sql2o sql2o;
+    private String insertStatement;
+    private Config config;
+//    private final int paramsNum = 19;
 
-    public Push(Sql2o sql2o) {
+    Push(Sql2o sql2o, Config config) {
         this.sql2o = sql2o;
-        generateParams();
+        this.config = config;
+        generateParams(config.getColumnNum());
     }
 
-    private void generateParams() {
+    private void generateParams(int paramsNum) {
         List<String> positionalParams = new ArrayList<>(paramsNum);
         for (int i = 1; i <= paramsNum; i++) {
             positionalParams.add(":p" + i);
@@ -29,11 +32,16 @@ public class Push {
         insertStatement = "INSERT INTO CHK VALUES (" + params + ")";
     }
 
-    public String push(Payload payload, Response response) {
+    String push(Payload payload, Response response) {
         try (Connection con = sql2o.beginTransaction()) {
             Query query = con.createQuery(insertStatement);
 
             for (List<Object> row: payload.checks) {
+                for (int dateColumn: config.getDateColumns()) {
+                    double timestamp = (double) row.get(dateColumn);
+                    long date = (long) timestamp;
+                    row.set(dateColumn, new java.sql.Date(date));
+                }
                 row.add(payload.srcStore);
                 query.withParams(row.toArray()).executeUpdate();
             }

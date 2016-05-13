@@ -18,7 +18,7 @@ public class CheckIndexes implements Route {
     public Object handle(Request request, Response response) throws Exception {
         StringBuilder sb = new StringBuilder();
         List<Long> numbers = sql2o.open()
-                .createQuery("SELECT NUMBER FROM CHK ORDER BY NUMBER")
+                .createQuery("SELECT ID FROM CHK ORDER BY ID")
                 .executeScalarList(Long.class);
         for (int i = 0; i < numbers.size(); i++) {
             long num = numbers.get(i);

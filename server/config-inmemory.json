@@ -1,7 +1,7 @@
 {
-  "db": {
-    "url": "jdbc:hsqldb:db/test",
-    "user": "sa",
-    "pass": ""
-  }
+  "dburl": "jdbc:hsqldb:db/test",
+  "dbusername": "sa",
+  "dbpassword": "",
+  "columnNum": 19,
+  "dateColumns": [1, 2, 12]
 }

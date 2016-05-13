@@ -1,7 +1,7 @@
 {
-  "db": {
-    "url": "jdbc:postgresql://localhost/test",
-    "user": "test_user",
-    "pass": "qwerty"
-  }
+  "dburl": "jdbc:postgresql://localhost/test",
+  "dbusername": "test_user",
+  "dbpassword": "qwerty",
+  "columnNum": 19,
+  "dateColumns": [1, 2, 12]
 }

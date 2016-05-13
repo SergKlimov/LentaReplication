@@ -47,8 +47,8 @@ def od_purchase(num, old_id, start=datetime(2016, 5, 1), end=datetime(2016, 5, 3
     id = old_id
     for _ in range(num):
         id += 1
-        datecommit = randomDate(start, end)
-        datecreate = randomDate(start, end)
+        datecommit = randomDate(start, end).timestamp()
+        datecreate = randomDate(start, end).timestamp()
         fiscaldocnum = randomString(64)
         numberfield = randomNumber(16)
         id_session = randomNumber(16)
@@ -58,7 +58,7 @@ def od_purchase(num, old_id, start=datetime(2016, 5, 1), end=datetime(2016, 5, 3
         checksumstart = randomNumber(16)
         discountvaluetotal = randomNumber(16)
         operationtype = bool(random.getrandbits(1))
-        receivedate = randomDate(start, end)
+        receivedate = randomDate(start, end).timestamp()
         id_purchaseref = randomNumber(16) if not receivedate else None
         set5checknumber = randomString(16) if not receivedate else None
         client_guid = randomNumber(64)
