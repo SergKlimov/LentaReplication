@@ -34,7 +34,6 @@ def main():
 def print_json():
     for x in itertools.count(-1):
         data = generateQuery(x)
-        #data = od_purchase(1, x)[0]
         date_handler = lambda obj: (
             obj.isoformat()
             if isinstance(obj, datetime)
@@ -53,7 +52,7 @@ def od_purchase(num, old_id, start=datetime(2016, 5, 1), end=datetime(2016, 5, 3
     return result
 
 
-def generateQuery(id, start, end):
+def generateQuery(id, start=datetime(2016, 5, 1), end=datetime(2016, 5, 31)):
     datecommit = randomDate(start, end)
     datecreate = randomDate(start, end)
     fiscaldocnum = randomString(64)
