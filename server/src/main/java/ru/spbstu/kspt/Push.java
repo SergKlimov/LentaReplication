@@ -36,9 +36,13 @@ class Push {
 
     private boolean isAlreadyInserted(Connection con, Object row[]) {
         int idColumn = config.columns.id;
+        int idStore = config.columns.id_store;
         long id = ((Number)row[idColumn]).longValue();
-        Long res = con.createQuery("SELECT id FROM chk WHERE id = :id")
-                .addParameter("id", id).executeScalar(Long.class);
+        Long res = con.createQuery("SELECT id FROM chk" +
+                " WHERE id = :id and id_store = :id_store")
+                .addParameter("id", id)
+                .addParameter("id_store", idStore)
+                .executeScalar(Long.class);
         return (res != null);
     }
 

@@ -28,6 +28,7 @@ public class Config {
         public int num;
         public int[] date;
         public int id;
+        public int id_store;
 
         @Override
         public String toString() {
