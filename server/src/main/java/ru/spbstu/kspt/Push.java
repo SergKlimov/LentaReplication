@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 class Push {
     private Sql2o sql2o;
@@ -74,9 +75,7 @@ class Push {
             }
             con.commit();
 
-            Statistics.insertCount.addAndGet(insertCounter);
-            Statistics.dupesCount.addAndGet(dupesCounter);
-            Statistics.insertStats.put(payload.srcStore, new Date());
+            Statistics.update(insertCounter, dupesCounter, payload.srcStore);
             return "";
         } catch (Exception e) {
             logger.error("Push error: {}", e);

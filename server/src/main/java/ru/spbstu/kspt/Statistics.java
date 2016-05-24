@@ -2,19 +2,17 @@ package ru.spbstu.kspt;
 
 import spark.*;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class Statistics extends TimerTask implements TemplateViewRoute {
-    static Map<Integer, Date> insertStats = new ConcurrentHashMap<>();
+    static ConcurrentMap<Integer, Shop> perShop = new ConcurrentHashMap<>();
     static AtomicInteger insertCount = new AtomicInteger();
     static AtomicInteger dupesCount = new AtomicInteger();
 
@@ -42,13 +40,26 @@ public class Statistics extends TimerTask implements TemplateViewRoute {
 
     @Override
     public ModelAndView handle(Request request, Response response) throws Exception {
-        Map<Integer, Date> map = new HashMap<>(insertStats);
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put("stats", map);
+        Map<Integer, Shop> shops = new HashMap<>(perShop);
+        attributes.put("perShop", shops);
         attributes.put("totalInsertsCount", insertCount.get());
         attributes.put("totalDupesCount", dupesCount.get());
         attributes.put("totalInsertsSpeed", diff);
 
         return new ModelAndView(attributes, "stats.html");
+    }
+
+    static public void update(int insertCounter, int dupesCounter, int store) {
+        insertCount.addAndGet(insertCounter);
+        dupesCount.addAndGet(dupesCounter);
+        perShop.putIfAbsent(store, new Shop());
+        perShop.get(store).insertCount++;
+        perShop.get(store).lastRequest = new Date();
+    }
+
+    public static class Shop {
+        public Date lastRequest;
+        public long insertCount;
     }
 }

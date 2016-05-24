@@ -52,13 +52,13 @@
     <tr>
         <td>Номер клиента</td>
         <td>Последняя выгрузка</td>
+        <td>Количество чеков</td>
     </tr>
     </thead>
-        <tr th:each="item: ${stats}">
-            <td th:text="${item.key}">
-            </td>
-            <td th:text="${item.value}">
-            </td>
+        <tr th:each="item: ${perShop}">
+            <td th:text="${item.key}"></td>
+            <td th:text="${item.value.lastRequest}"></td>
+            <td th:text="${item.value.insertCount}"></td>
         </tr>
 </table>
 </html>

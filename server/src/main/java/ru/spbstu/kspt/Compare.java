@@ -32,7 +32,7 @@ class Compare {
 
     public String getDiff(PayloadForCompare payload, Response response) {
         List<Long> numbers = sql2o.open()
-                .createQuery("SELECT * FROM CHK WHERE id_store = :store AND datecommit >= NOW() - '1 day'::INTERVAL")
+                .createQuery("SELECT id FROM CHK WHERE id_store = :store AND datecommit >= NOW() - '1 day'::INTERVAL")
                 .addParameter("store", payload.srcStore)
                 .executeScalarList(Long.class);
         return generateDiff(payload.checkIds, numbers);
