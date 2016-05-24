@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Statistics extends TimerTask implements TemplateViewRoute {
     static Map<Integer, Date> insertStats = new ConcurrentHashMap<>();
     static AtomicInteger insertCount = new AtomicInteger();
+    static AtomicInteger dupesCount = new AtomicInteger();
 
     long oldValue = 0;
     long diff;
@@ -31,7 +32,7 @@ public class Statistics extends TimerTask implements TemplateViewRoute {
 
     @Override
     public void run() {
-        long newValue = insertCount.get();
+        long newValue = insertCount.get() + dupesCount.get();
         diff = newValue - oldValue;
         if (diff != 0) {
             System.out.println("Inserts: " + diff);
@@ -45,6 +46,7 @@ public class Statistics extends TimerTask implements TemplateViewRoute {
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("stats", map);
         attributes.put("totalInsertsCount", insertCount.get());
+        attributes.put("totalDupesCount", dupesCount.get());
         attributes.put("totalInsertsSpeed", diff);
 
         return new ModelAndView(attributes, "stats.html");

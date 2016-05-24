@@ -53,9 +53,9 @@ public class Main {
 
     private static HikariDataSource setUpDataSource(Config config) {
         HikariConfig dbConfig = new HikariConfig();
-        dbConfig.setJdbcUrl(config.getDBUrl());
-        dbConfig.setUsername(config.getDBUsername());
-        dbConfig.setPassword(config.getDBPassword());
+        dbConfig.setJdbcUrl(config.db.url);
+        dbConfig.setUsername(config.db.username);
+        dbConfig.setPassword(config.db.password);
         return new HikariDataSource(dbConfig);
     }
 

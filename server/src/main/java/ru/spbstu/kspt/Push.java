@@ -22,7 +22,7 @@ class Push {
     Push(Sql2o sql2o, Config config) {
         this.sql2o = sql2o;
         this.config = config;
-        generateParams(config.getColumnNum());
+        generateParams(config.columns.num);
     }
 
     private void generateParams(int paramsNum) {
@@ -34,27 +34,52 @@ class Push {
         insertStatement = String.format("INSERT INTO CHK VALUES (%s, :store);", params);
     }
 
+    private boolean isAlreadyInserted(Connection con, Object row[]) {
+        int idColumn = config.columns.id;
+        int idStore = config.columns.id_store;
+        long id = ((Number)row[idColumn]).longValue();
+        Long res = con.createQuery("SELECT id FROM chk" +
+                " WHERE id = :id and id_store = :id_store")
+                .addParameter("id", id)
+                .addParameter("id_store", idStore)
+                .executeScalar(Long.class);
+        return (res != null);
+    }
+
+    private void fixDateColumns(Object row[]) {
+        for (int dateColumn: config.columns.date) {
+            Long timestamp = ((Number)row[dateColumn]).longValue();
+            row[dateColumn] = new java.sql.Date(timestamp);
+        }
+    }
+
     String push(Payload payload, Response response) {
         try (Connection con = sql2o.beginTransaction()) {
             Query query = con.createQuery(insertStatement);
+            int insertCounter = 0;
+            int dupesCounter = 0;
 
             for (Object row[]: payload.checks) {
-                logger.debug("Pushing row: {}", Arrays.toString(row));
-                for (int dateColumn: config.getDateColumns()) {
-                    Long timestamp = ((Number)row[dateColumn]).longValue();
-                    row[dateColumn] = new java.sql.Date(timestamp);
+                if (isAlreadyInserted(con, row)) {
+                    logger.debug("Skipping: {}", Arrays.toString(row));
+                    dupesCounter++;
+                } else {
+                    logger.debug("Inserting: {}", Arrays.toString(row));
+                    fixDateColumns(row);
+                    query.withParams(row)
+                            .addParameter("store", payload.srcStore)
+                            .executeUpdate();
+                    insertCounter++;
                 }
-                query.withParams(row)
-                        .addParameter("store", payload.srcStore)
-                        .executeUpdate();
             }
             con.commit();
 
-            Statistics.insertCount.addAndGet(payload.checks.length);
+            Statistics.insertCount.addAndGet(insertCounter);
+            Statistics.dupesCount.addAndGet(dupesCounter);
             Statistics.insertStats.put(payload.srcStore, new Date());
             return "";
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Push error: {}", e);
             response.status(500);
             return "Error: " + e.toString();
         }

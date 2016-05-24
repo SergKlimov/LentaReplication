@@ -1,4 +1,4 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -33,7 +33,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">Bootstrap theme</a>
+            <a class="navbar-brand" href="#">LentaReplication</a>
         </div>
     </div>
 </nav>
@@ -43,6 +43,7 @@
         <h1>Статистика</h1>
         <p>Скорость получения чеков: <span th:text="${totalInsertsSpeed}"></span></p>
         <p>Всего принято чеков: <span th:text="${totalInsertsCount}"></span></p>
+        <p>Повторно принятых чеков: <span th:text="${totalDupesCount}"></span></p>
     </div>
 </div>
 

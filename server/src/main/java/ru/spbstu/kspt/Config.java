@@ -6,61 +6,45 @@ import java.util.List;
 /**
  * Created by artyom on 26.04.16.
  */
-class Config {
-    private String DBUrl;
-    private String DBUsername;
-    private String DBPassword;
-    private int columnNum;
-    private int[] dateColumns;
+public class Config {
+    public DB db;
+    public Columns columns;
 
-    public String getDBUrl() {
-        return DBUrl;
+    public static class DB {
+        public String url;
+        public String username;
+        public String password;
+
+        @Override
+        public String toString() {
+            return "DB{" +
+                    "url='" + url + '\'' +
+                    ", username='" + username + '\'' +
+                    ", password='" + password + '\'' +
+                    '}';
+        }
     }
+    public static class Columns {
+        public int num;
+        public int[] date;
+        public int id;
+        public int id_store;
 
-    public void setDBUrl(String DBUrl) {
-        this.DBUrl = DBUrl;
-    }
-
-    public String getDBUsername() {
-        return DBUsername;
-    }
-
-    public void setDBUsername(String DBUsername) {
-        this.DBUsername = DBUsername;
-    }
-
-    public String getDBPassword() {
-        return DBPassword;
-    }
-
-    public void setDBPassword(String DBPassword) {
-        this.DBPassword = DBPassword;
-    }
-
-    public int getColumnNum() {
-        return columnNum;
-    }
-
-    public void setColumnNum(int columnNum) {
-        this.columnNum = columnNum;
-    }
-
-    public int[] getDateColumns() {
-        return dateColumns;
-    }
-
-    public void setDateColumns(int[] dateColumns) {
-        this.dateColumns = dateColumns;
+        @Override
+        public String toString() {
+            return "Columns{" +
+                    "num=" + num +
+                    ", date=" + Arrays.toString(date) +
+                    ", id=" + id +
+                    '}';
+        }
     }
 
     @Override
     public String toString() {
         return "Config{" +
-                "DBUrl='" + DBUrl + '\'' +
-                ", DBUsername='" + DBUsername + '\'' +
-                ", DBPassword='" + DBPassword + '\'' +
-                ", columnNum=" + columnNum +
-                ", dateColumns=" + Arrays.toString(dateColumns) +
+                "db=" + db +
+                ", columns=" + columns +
                 '}';
     }
 }
