@@ -33,7 +33,7 @@ class DatabaseService {
     public String srcStore;
 
     public ResultPayload() {
-        checks = new ArrayList<List<Object>>();
+      checks = new ArrayList<List<Object>>();
     }
   }
 
@@ -72,7 +72,7 @@ class DatabaseService {
     }
   }
 
-  public String getAddedData(int count){
+  public String getAddedData(int count) {
     Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
 
     StringBuilder stringBuilder = new StringBuilder();
@@ -80,22 +80,21 @@ class DatabaseService {
 
     for (int i = 0; i < rowList.size() - 1; i++) {
       stringBuilder.append(rowList.get(i))
-              .append(", ");
+          .append(", ");
     }
 
     stringBuilder.append(rowList.get(rowList.size() - 1))
-            .append(" FROM ")
-            .append(this.table_name)
-            .append(" ORDER BY ID DESC LIMIT ")
-            .append(count);
+        .append(" FROM ")
+        .append(this.table_name)
+        .append(" ORDER BY ID DESC LIMIT ")
+        .append(count);
 
     String sql = stringBuilder.toString();
     String ret = "";
 
-    try {
-      Connection con = sql2o.open();
+    try (Connection con = sql2o.open()) {
       List<Map<String, Object>> payloads = con.createQuery(sql)
-              .executeAndFetchTable().asList();
+          .executeAndFetchTable().asList();
 
       if (payloads.isEmpty())
         return ret;
@@ -142,14 +141,13 @@ class DatabaseService {
     String sql = stringBuilder.toString();
     String ret = "";
 
-    try {
-      Connection con = sql2o.open();
+    try (Connection con = sql2o.open()) {
       List<Map<String, Object>> payloads = con.createQuery(sql)
           .executeAndFetchTable().asList();
 
       if (payloads.isEmpty())
         return ret;
-      
+
       ResultPayload resultPayload = new ResultPayload();
 
       for (Map<String, Object> map : payloads) {
@@ -188,8 +186,7 @@ class DatabaseService {
     Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
     String sql = "DELETE FROM " + this.table_name + " WHERE id = :id";
     for (Object id : lastIdList) {
-      try {
-        Connection con = sql2o.open();
+      try (Connection con = sql2o.open()) {
         con.createQuery(sql)
             .addParameter("id", id)
             .executeUpdate();
@@ -199,7 +196,7 @@ class DatabaseService {
     }
     lastIdList.clear();
   }
-  
+
   String getAllChecksPerDayByJson() {
     Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
 
@@ -207,26 +204,24 @@ class DatabaseService {
     stringBuilder.append("SELECT id FROM ")
         .append(this.const_table_name)
         .append(" WHERE datecommit >= NOW() - '1 day'::INTERVAL");
-     
 
     String sql = stringBuilder.toString();
     String ret = "";
-    try {
-        Connection con = sql2o.open();
-        List<Long> payloads = con.createQuery(sql)
-            .executeScalarList(Long.class);
-        if (payloads.isEmpty())
-            return ret;
-      
-        PayloadForCompare payloadForCompare = new PayloadForCompare(payloads, this.storeId);
-        ret = convertObjectToJson(payloadForCompare);
+    try (Connection con = sql2o.open()) {
+      List<Long> payloads = con.createQuery(sql)
+          .executeScalarList(Long.class);
+      if (payloads.isEmpty())
+        return ret;
+
+      PayloadForCompare payloadForCompare = new PayloadForCompare(payloads, this.storeId);
+      ret = convertObjectToJson(payloadForCompare);
     } catch (Exception ex) {
       ex.printStackTrace();
     }
     return ret;
   }
-  
-   String getEntryByIdByJson(ArrayList<Integer> arr) {
+
+  String getEntryByIdByJson(ArrayList<Integer> arr) {
     Sql2o sql2o = new Sql2o(this.db_url, this.db_user, this.dp_password);
 
     StringBuilder stringBuilder = new StringBuilder();
@@ -245,8 +240,7 @@ class DatabaseService {
         .append(")");
     String sql = stringBuilder.toString();
     String ret = "";
-    try {
-      Connection con = sql2o.open();
+    try (Connection con = sql2o.open()) {
       List<Map<String, Object>> payloads = con.createQuery(sql)
           .executeAndFetchTable().asList();
 
