@@ -60,13 +60,8 @@ class DatabaseService {
       this.storeId = properties.getProperty("store_id");
       this.table_name = properties.getProperty("table_name");
       this.const_table_name = properties.getProperty("const_table_name");
-       try {
-        this.check_time_hour = Integer.parseInt(properties.getProperty("check_time_hour"));
-        this.check_time_minute = Integer.parseInt(properties.getProperty("check_time_minute"));
-      } catch (Exception e) {
-          e.printStackTrace();
-      }
-
+      this.check_time_hour = Integer.parseInt(properties.getProperty("check_time_hour"));
+      this.check_time_minute = Integer.parseInt(properties.getProperty("check_time_minute"));
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
