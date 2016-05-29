@@ -14,7 +14,7 @@ import (
 
 type Row []interface{}
 
-const numClients = 300
+const numClients = 3000
 const secondsToRun = 10
 const bufferSize = 100
 const useCBOR = false
@@ -92,9 +92,8 @@ func main() {
 	wg.Add(numClients)
 	data := make(chan Row, bufferSize)
 	go fetcher(data, numClients*secondsToRun)
-	// deleteAll()
+	deleteAll()
 	for i := 0; i < numClients; i++ {
-		time.Sleep(time.Second / numClients);
 		go client(data, i, &wg, useCBOR)
 	}
 	wg.Wait()
