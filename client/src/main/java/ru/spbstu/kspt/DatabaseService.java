@@ -20,6 +20,8 @@ class DatabaseService {
   private String table_name;
   private String const_table_name;
   private String storeId;
+  private int check_time_hour;
+  private int check_time_minute;
 
   private final List<String> rowList = new ArrayList<String>(Arrays.asList("id", "datecommit", "datecreate",
       "fiscaldocnum", "numberfield", "id_session", "id_shift", "checkstatus", "checksumend", "checksumstart",
@@ -58,7 +60,8 @@ class DatabaseService {
       this.storeId = properties.getProperty("store_id");
       this.table_name = properties.getProperty("table_name");
       this.const_table_name = properties.getProperty("const_table_name");
-
+      this.check_time_hour = Integer.parseInt(properties.getProperty("check_time_hour"));
+      this.check_time_minute = Integer.parseInt(properties.getProperty("check_time_minute"));
     } catch (Exception e) {
       e.printStackTrace();
     } finally {
@@ -269,6 +272,15 @@ class DatabaseService {
     }
 
     return ret;
+  }
+  
+  Date getCheckTime () {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.HOUR_OF_DAY, this.check_time_hour);
+        calendar.set(Calendar.MINUTE, this.check_time_minute);
+        if(calendar.compareTo(Calendar.getInstance()) == -1)
+            calendar.add(Calendar.DATE, 1);
+        return calendar.getTime();
   }
 }
 
